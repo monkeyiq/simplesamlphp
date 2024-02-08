@@ -1,4 +1,4 @@
-# SimpleSAMLphp modules
+# SimpleSAMLphp developer information
 
 <!-- 
 	This file is written in Markdown syntax. 
