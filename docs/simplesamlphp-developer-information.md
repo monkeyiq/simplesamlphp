@@ -50,6 +50,25 @@ the [docs
 subdirectory](https://github.com/simplesamlphp/simplesamlphp/tree/master/docs)
 of the main repository on github.
 
+## Following a simple login
 
+The `SimpleSAML\Auth\Simple` class takes the authentication_source
+name and can be used to find a login URL with `getLoginURL()`. The
+getLoginURL method takes the return URL as it's only parameter. The
+URL returned from `getLoginURL()` will be a request to module.php and
+include the return URL information.
+
+The module.php code `Module::process`. The `process` method uses
+Symfony to dispatch the request. This may result in a call to
+modules/core/src/Controller/Login.php in `Login::loginuserpass()`. The
+code flows through `handleLogin()` which may call
+`UserPassBase::handleLogin(authstateid, username, password)`. The
+`handleLogin` method looks up the `$as = Auth\Source` and passes the
+login credentials to the `$as->login( username, password )` method.
+
+For an SQL based login this would be in
+modules/sqlauth/src/Auth/Source/SQL.php and the `SQL::login` method.
+This `login` method either returns the user attributes on success or
+throws an exception on login failure.
 
 
