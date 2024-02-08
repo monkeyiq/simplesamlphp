@@ -25,6 +25,15 @@ example to make a contribution to the v2.1.1 release you would
 checkout the [simplesamlphp-2.1
 branch](https://github.com/simplesamlphp/simplesamlphp/tree/simplesamlphp-2.1).
 
+## Libraries that SimpleSAMLphp uses and planned changes
+
+Many dependancies are listed in the require clause of the composer.json such as Symfony, Twig, and simplesamlphp/saml2.
+
+As at early 2024 there is a plan to move from using robrichards/xmlseclibs to using the newly written [xml-security
+library](https://github.com/simplesamlphp/xml-security). The integration of xml-security started in the v5 of the saml2 library.
+The saml2 library is already a dependency of SimpleSAMLphp and is brought in with composer as a [dependency here.](https://github.com/simplesamlphp/simplesamlphp/blob/15019f97eb1b4041859582b8b6f39fe432b603af/composer.json#L66C21-L66C29).
+
+
 
 
 ## Build process
