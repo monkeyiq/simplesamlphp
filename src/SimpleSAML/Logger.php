@@ -242,6 +242,8 @@ class Logger
     }
 
 
+    
+
     /**
      * Statistics.
      *

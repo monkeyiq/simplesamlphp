@@ -720,3 +720,10 @@ msgstr "Votre session est encore valide pour %remaining% secondes."
 
 msgid "[Preferred choice]"
 msgstr "[Choix préféré]"
+
+
+msgid "from-messages-domain-1"
+msgstr "from-messages-domain-1 from main french messages.po"
+
+msgid "from-messages-domain-x"
+msgstr "from-messages-domain-x from main french messages.po"

@@ -12,6 +12,7 @@ namespace SimpleSAML\Locale;
 
 use Gettext\TranslatorFunctions;
 use SimpleSAML\Configuration;
+use SimpleSAML\Logger;
 
 class Translate
 {
@@ -71,8 +72,13 @@ class Translate
         // This may happen if you forget to set a variable and then run undefinedVar through the trans-filter
         $original = $original ?? 'undefined variable';
 
-        $text = TranslatorFunctions::getTranslator()->gettext($original);
+        Logger::debug("AAA translateSingularGettext() $original");
 
+        $text = TranslatorFunctions::getTranslator()->gettext($original);
+        if( $text === $original ) {
+            $text = TranslatorFunctions::getTranslator()->dgettext("messages",$original);
+           
+        }
         if (func_num_args() === 1) {
             return $text;
         }

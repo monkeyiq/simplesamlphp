@@ -346,3 +346,9 @@ msgstr ""
 
 msgid "required"
 msgstr ""
+
+msgid "from-messages-domain-2"
+msgstr "from-messages-domain-2 from admin.po file"
+
+msgid "from-messages-domain-x"
+msgstr "from-messages-domain-x from admin.po file"

@@ -323,3 +323,9 @@ msgstr "Bibliothèque predis/predis"
 
 msgid "required"
 msgstr "requis"
+
+msgid "from-messages-domain-2"
+msgstr "from-messages-domain-2 from french admin.po file"
+
+msgid "from-messages-domain-x"
+msgstr "from-messages-domain-x from french admin.po file"

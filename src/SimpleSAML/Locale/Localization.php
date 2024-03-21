@@ -132,7 +132,11 @@ class Localization
         $this->addDomain($localeDir, $domain ?? $module);
     }
 
-
+    public function defaultDomain(string $domain): self
+    {
+        $this->translator->defaultDomain($domain);
+        return $this;
+    }
     /**
      * Add a new translation domain
      * (We're assuming that each domain only exists in one place)
@@ -244,7 +248,6 @@ class Localization
             $file = new File($langPath . $domain . '.po', false);
             if ($file->getRealPath() !== false && $file->isReadable()) {
                 $translations = (new PoLoader())->loadFile($file->getRealPath());
-                $translations->setDomain('');
                 $arrayGenerator = new ArrayGenerator();
                 $this->translator->addTranslations(
                     $arrayGenerator->generateArray($translations)

@@ -1,6 +1,7 @@
 msgid ""
 msgstr ""
-"X-Domain: core\n"
+#"X-Domain: core\n"
+"X-Domain: messages\n"
 
 msgid "Close the web browser, and try again."
 msgstr "Fermez le navigateur, essayez à nouveau."

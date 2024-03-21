@@ -1,6 +1,7 @@
 msgid ""
 msgstr ""
-"X-Domain: core\n"
+#"X-Domain: core\n"
+"X-Domain: messages\n"
 
 msgid "A service has requested you to authenticate yourself. Please enter your username and password in the form below."
 msgstr ""
