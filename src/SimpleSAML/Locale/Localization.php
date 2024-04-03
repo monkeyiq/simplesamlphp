@@ -26,6 +26,7 @@ class Localization
      * @var string
      */
     public const DEFAULT_DOMAIN = 'messages';
+    public const CORE_DOMAIN = 'core';
 
     /**
      * The default locale directory
@@ -238,6 +239,8 @@ class Localization
         }
 
         $file = new File($langPath . $domain . '.mo', false);
+        Logger::debug("loadGettextGettextFromPO(1) " . $file->getRealPath() );
+            
         if ($file->getRealPath() !== false && $file->isReadable()) {
             $translations = (new MoLoader())->loadFile($file->getRealPath());
             $arrayGenerator = new ArrayGenerator();
@@ -246,8 +249,12 @@ class Localization
             );
         } else {
             $file = new File($langPath . $domain . '.po', false);
+            Logger::debug("loadGettextGettextFromPO(2) " . $file->getRealPath() );
             if ($file->getRealPath() !== false && $file->isReadable()) {
                 $translations = (new PoLoader())->loadFile($file->getRealPath());
+                Logger::debug("loadGettextGettextFromPO(2) loaded " . $translations->count());
+                Logger::debug("loadGettextGettextFromPO(2) domain " . $translations->getDomain());
+//                $translations->setDomain('');
                 $arrayGenerator = new ArrayGenerator();
                 $this->translator->addTranslations(
                     $arrayGenerator->generateArray($translations)
@@ -272,6 +279,7 @@ class Localization
         $this->setupTranslator();
         // setup default domain
         $this->addDomain($this->localeDir, self::DEFAULT_DOMAIN);
+        $this->addModuleDomain(self::CORE_DOMAIN,null,self::CORE_DOMAIN);
     }
 
 
