@@ -72,22 +72,10 @@ class Translate
         // This may happen if you forget to set a variable and then run undefinedVar through the trans-filter
         $original = $original ?? 'undefined variable';
 
-        if( $original == "\"Close the web browser, and try again.\"" ) {
-            Logger::debug("AAA translateSingularGettext() $original");
-        }
-        
         $text = TranslatorFunctions::getTranslator()->gettext($original);
-        if( $text === $original ) {
-            if( $original == "\"Close the web browser, and try again.\"" ) {
-                Logger::debug("AAA2 translateSingularGettext() $original");
-            }
-            
+        if( $text === $original ) {            
             $text = TranslatorFunctions::getTranslator()->dgettext("core",$original);
             if( $text === $original ) {
-                if( $original == "\"Close the web browser, and try again.\"" ) {
-                    Logger::debug("AAA3 translateSingularGettext() $original");
-                }
-                
                 $text = TranslatorFunctions::getTranslator()->dgettext("messages",$original);
             }
         }
