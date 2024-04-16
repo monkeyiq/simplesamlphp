@@ -85,6 +85,92 @@ class UpdateTranslatableStringsCommand extends Command
         return $ret;
     }
 
+    protected function updateTranslation($messages, $domain, $template)
+    {
+        $loader = new PoLoader();
+        $poGenerator = new PoGenerator();
+
+        // This is the base directory of the SimpleSAMLphp installation
+        $baseDir = dirname(__FILE__, 4);
+
+        
+        // If we have at least one translation, write it into a template file
+        if ($template->count() > 0) {
+            $moduleDir = $baseDir . ($domain === 'messages' ? '' : '/modules/' . $domain);
+            $moduleLocalesDir = $moduleDir . '/locales/';
+            $domain = $domain ?: 'messages';
+            echo "moduleLocalesDir $moduleLocalesDir \n";
+            $finder = new Finder();
+            foreach ($finder->files()->in($moduleLocalesDir . '**/LC_MESSAGES/')->name("{$domain}.po") as $poFile) {
+                $current = $loader->loadFile($poFile->getPathName());
+
+                $merged = $template->mergeWith(
+                    $current,
+                    Merge::TRANSLATIONS_OVERRIDE
+                    | Merge::COMMENTS_OURS
+                    | Merge::HEADERS_OURS
+                    | Merge::REFERENCES_THEIRS
+                    | Merge::EXTRACTED_COMMENTS_OURS
+                );
+                $merged->setDomain($domain);
+
+                $dedupModules = array("saml", "core", "admin");
+                $langCode = basename(dirname($poFile->getPathName(),2));
+                if( in_array($domain,$dedupModules)) {
+//                    if($domain == "admin" && $langCode == "fr") {
+                        echo "AAA YES\n";
+//                        print_r($messages);
+
+                        $iter = $messages->getIterator();
+                        foreach ($iter as $key=>$val) {
+                            echo $key.":".$val->getId()."\n";
+//                            $merged->remove($val);
+
+                            if( $merged->has( $val )) { 
+                                echo "...... in both\n";
+                                echo "   id: " . $val->getId() . "\n";
+                                echo "back1: " . Translation::create($val->getContext(), $val->getId())->getId() . "\n";
+                                echo "back2: " . Translation::create(null, $val->getId())->getId() . "\n";
+                                echo "back3: " . Translation::create($val->getContext(), $val->getOriginal())->getId() . "\n";
+                                echo "merged: " . $merged->find($val->getContext(), $val->getOriginal())->getId() . "\n";
+                                echo "   val: " . $val->getId() . "\n";
+                                echo "merge2: " . $merged->find($val->getContext(), $val->getOriginal())->getOriginal() . "\n";
+                                echo "   va2: " . $val->getOriginal() . "\n";
+                                echo "merge3: " . $merged->find($val->getContext(), $val->getOriginal())->getTranslation() . "\n";
+                                echo "   va3: " . $val->getTranslation() . "\n";
+
+                                $v = $merged->find($val->getContext(), $val->getOriginal())->getTranslation();
+                                if( !$v ) {
+                                    $v = $val->getTranslation();
+                                }
+                                echo " v: $v \n";
+                                if( $v ) {
+                                    $merged->remove($val);
+                                    $val->translate($v);
+                                }
+                            }
+                        }
+                        
+//                    }
+                }
+                
+                //
+                // Sort the translations in a predictable way
+                //
+                $iter = $merged->getIterator();
+                $iter->ksort();
+                $merged = $this->cloneIteratorToTranslations(
+                    Translations::create($merged->getDomain(), $merged->getLanguage()),
+                    $iter,
+                );
+
+                $poGenerator->generateFile($merged, $poFile->getPathName());
+            }
+        }        
+    }
+
+    
+    
     /**
      * @param \Symfony\Component\Console\Input\InputInterface $input
      * @param \Symfony\Component\Console\Output\OutputInterface $output
@@ -113,9 +199,6 @@ class UpdateTranslatableStringsCommand extends Command
             }
             $modules = $known;
         }
-
-        // This is the base directory of the SimpleSAMLphp installation
-        $baseDir = dirname(__FILE__, 4);
 
         $translationDomains = [];
         foreach ($modules as $module) {
@@ -157,7 +240,9 @@ class UpdateTranslatableStringsCommand extends Command
         $loader = new PoLoader();
         $poGenerator = new PoGenerator();
 
-        foreach ($phpScanner->getTranslations() as $domain => $template) {
+        $translations = $phpScanner->getTranslations();
+        
+        foreach ($translations as $domain => $template) {
             // If we also have results from the Twig-templates, merge them
             if (array_key_exists($domain, $migrated)) {
                 foreach ($migrated[$domain] as $migratedTranslations) {
@@ -165,41 +250,21 @@ class UpdateTranslatableStringsCommand extends Command
                 }
             }
 
-            // If we have at least one translation, write it into a template file
-            if ($template->count() > 0) {
-                $moduleDir = $baseDir . ($domain === 'messages' ? '' : '/modules/' . $domain);
-                $moduleLocalesDir = $moduleDir . '/locales/';
-                $domain = $domain ?: 'messages';
-
-                $finder = new Finder();
-                foreach ($finder->files()->in($moduleLocalesDir . '**/LC_MESSAGES/')->name("{$domain}.po") as $poFile) {
-                    $current = $loader->loadFile($poFile->getPathName());
-
-                    $merged = $template->mergeWith(
-                        $current,
-                        Merge::TRANSLATIONS_OVERRIDE
-                        | Merge::COMMENTS_OURS
-                        | Merge::HEADERS_OURS
-                        | Merge::REFERENCES_THEIRS
-                        | Merge::EXTRACTED_COMMENTS_OURS
-                    );
-                    $merged->setDomain($domain);
-
-                    //
-                    // Sort the translations in a predictable way
-                    //
-                    $iter = $merged->getIterator();
-                    $iter->ksort();
-                    $merged = $this->cloneIteratorToTranslations(
-                        Translations::create($merged->getDomain(), $merged->getLanguage()),
-                        $iter,
-                    );
-
-                    $poGenerator->generateFile($merged, $poFile->getPathName());
-                }
-            }
+            $translations[$domain] = $template;
         }
 
+        // dedup translations from core, saml, admin into the messages if they exist
+        // in both places.
+        $messages = $translations["messages"];
+        foreach ($translations as $domain => $template) {
+            if( $domain != "messages" ) {
+                $this->updateTranslation($messages,$domain, $template);
+            }
+        }
+        $this->updateTranslation($messages, "messages",$messages);
+
+
+        
         return Command::SUCCESS;
     }
 }
