@@ -327,11 +327,9 @@ class MetadataBuilder
      */
     private function getIDPSSODescriptor(): IDPSSODescriptor
     {
-        Logger::error("getIDPSSODescriptor() 1");
         $authnRequestsSigned = $this->wantsAuthnRequestsSigned();
         $extensions = $this->getExtensions();
         $keyDescriptor = $this->getKeyDescriptor();
-        Logger::error("getIDPSSODescriptor() 3");
 
         $artifactResolutionService = [];
         if ($this->metadata->hasValue('ArtifactResolutionService')) {
@@ -340,13 +338,11 @@ class MetadataBuilder
                 ArtifactResolutionService::class,
             );
         }
-        Logger::error("getIDPSSODescriptor() 4");
 
         $singleLogoutService = self::createEndpoints(
             $this->metadata->getEndpoints('SingleLogoutService'),
             SingleLogoutService::class,
         );
-        Logger::error("getIDPSSODescriptor() 6");
 
         $nids = [];
         foreach ($this->metadata->getOptionalArrayizeString('NameIDFormat', []) as $nid) {
