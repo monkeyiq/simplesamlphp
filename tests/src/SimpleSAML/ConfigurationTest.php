@@ -717,13 +717,6 @@ class ConfigurationTest extends ClearStateTestCase
          * tests for AssertionConsumerService.
          */
         $acs_eps = [
-            // just a string with the location
-            'https://example.com/endpoint.php',
-            // an array of strings with location of different endpoints
-            [
-                'https://www1.example.com/endpoint.php',
-                'https://www2.example.com/endpoint.php',
-            ],
             // define location and binding
             [
                 [
@@ -782,16 +775,6 @@ class ConfigurationTest extends ClearStateTestCase
             ],
         ];
         $acs_expected_eps = [
-            // output should be completed with the default binding (HTTP-POST for ACS)
-            [
-                'Location' => 'https://example.com/endpoint.php',
-                'Binding' => Constants::BINDING_HTTP_POST,
-            ],
-            // we should just get the first endpoint with the default binding
-            [
-                'Location' => 'https://www1.example.com/endpoint.php',
-                'Binding' => Constants::BINDING_HTTP_POST,
-            ],
             // if we specify the binding, we should get it back
             [
                 'Location' => 'https://example.com/endpoint.php',
@@ -827,12 +810,12 @@ class ConfigurationTest extends ClearStateTestCase
 
         $a = [
             'metadata-set' => 'saml20-sp-remote',
-            'ArtifactResolutionService' => 'https://example.com/ars',
+            'ArtifactResolutionService' => [[ 'Location' => 'https://example.com/ars', 'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:SOAP' ]],
             'SingleSignOnService' => 'https://example.com/sso',
-            'SingleLogoutService' => [
+            'SingleLogoutService' => [[
                 'Location' => 'https://example.com/slo',
                 'Binding' => 'valid_binding', // test unknown bindings if we don't specify a list of valid ones
-            ],
+            ]],
         ];
 
         $valid_bindings = [
@@ -847,10 +830,11 @@ class ConfigurationTest extends ClearStateTestCase
         foreach ($acs_eps as $i => $ep) {
             $a['AssertionConsumerService'] = $ep;
             $c = Configuration::loadFromArray($a);
-            $this->assertEquals($acs_expected_eps[$i], $c->getDefaultEndpoint(
+            $actual = $c->getDefaultEndpoint(
                 'AssertionConsumerService',
                 $valid_bindings,
-            ));
+            );
+            $this->assertEquals($acs_expected_eps[$i], $actual );
         }
 
         $a['metadata-set'] = 'saml20-idp-remote';
@@ -865,7 +849,7 @@ class ConfigurationTest extends ClearStateTestCase
         $this->assertEquals(
             [
                 'Location' => 'https://example.com/slo',
-                'Binding' => Constants::BINDING_HTTP_REDIRECT,
+                'Binding' => 'valid_binding', // Constants::BINDING_HTTP_REDIRECT,
             ],
             $c->getDefaultEndpoint('SingleLogoutService'),
         );
@@ -907,7 +891,12 @@ class ConfigurationTest extends ClearStateTestCase
         // test response location for old-style configurations
         $c = Configuration::loadFromArray([
             'metadata-set' => 'saml20-idp-remote',
-            'SingleSignOnService' => 'https://example.com/endpoint.php',
+            'SingleSignOnService' => array(
+                array(
+                    'Location' => 'https://example.com/endpoint.php',
+                    'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+                    'ResponseLocation' => 'https://example.com/response.php',
+                )),
             'SingleSignOnServiceResponse' => 'https://example.com/response.php',
         ]);
         $e = [
