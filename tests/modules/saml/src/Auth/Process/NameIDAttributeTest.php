@@ -11,6 +11,9 @@ use SimpleSAML\Module\saml\Auth\Process\NameIDAttribute;
 use SimpleSAML\SAML2\Constants as C;
 use SimpleSAML\SAML2\XML\saml\NameID;
 
+use ReflectionClass;
+use SimpleSAML\Module\saml\Auth\Process\AttributeNameID;
+
 /**
  * Test for the saml:NameIDAttribute filter.
  *
@@ -237,4 +240,94 @@ class NameIDAttributeTest extends TestCase
         $this->assertEquals("{$nameId->getNameQualifier()}", $spId);
         $this->assertEquals("{$nameId->getSPNameQualifier()}", $idpId);
     }
+
+
+    public function testAttributeNameID(): void
+    {
+        $spId = 'eugeneSP';
+        $idpId = 'eugeneIdP';
+        $config = [
+            'attribute' => $attributeName,
+            'format' => '%V',
+            'Format' => 'string',
+            'identifyingAttribute' => 'mail',
+        ];
+
+        $nameId = new AttributeNameID( $config, [] );
+
+        $email = 'eugene@oombaas';
+        $state = [
+            'Attributes' => [
+                'mail' => [$email],
+            ],
+        ];
+
+        $class = new ReflectionClass(\SimpleSAML\Module\saml\Auth\Process\AttributeNameID::class);
+        $method = $class->getMethod('getValue');
+        $method->setAccessible(true);
+        $v = $method->invokeArgs($nameId,array($state));
+        
+        $this->assertEquals($email, $v);
+    }
+
+
+    public function testAttributeNameIDSecond(): void
+    {
+        $spId = 'eugeneSP';
+        $idpId = 'eugeneIdP';
+        $config = [
+            'attribute' => $attributeName,
+            'format' => '%V',
+            'Format' => 'string',
+            'identifyingAttributes' => ['mail','eduPersonPrincipalName'],
+        ];
+
+        $nameId = new AttributeNameID( $config, [] );
+
+        $email = 'eugene@oombaas';
+        $state = [
+            'Attributes' => [
+                'eduPersonPrincipalName' => [$email],
+            ],
+        ];
+
+        $class = new ReflectionClass(\SimpleSAML\Module\saml\Auth\Process\AttributeNameID::class);
+        $method = $class->getMethod('getValue');
+        $method->setAccessible(true);
+        $v = $method->invokeArgs($nameId,array($state));
+        
+        $this->assertEquals($email, $v);
+    }
+    
+    public function testAttributeNameIDThird(): void
+    {
+        $spId = 'eugeneSP';
+        $idpId = 'eugeneIdP';
+        $config = [
+            'attribute' => $attributeName,
+            'format' => '%V',
+            'Format' => 'string',
+            'identifyingAttributes' => ['mail','is-empty','eduPersonPrincipalName'],
+        ];
+
+        $nameId = new AttributeNameID( $config, [] );
+
+        $email = 'eugene@oombaas';
+        $state = [
+            'Attributes' => [
+                'is-empty' => [''], // This being here will cause
+                                    // $v below to be '' instead of null.
+                'nom-de-plume' => [$email],
+            ],
+        ];
+
+        $class = new ReflectionClass(\SimpleSAML\Module\saml\Auth\Process\AttributeNameID::class);
+        $method = $class->getMethod('getValue');
+        $method->setAccessible(true);
+        $v = $method->invokeArgs($nameId,array($state));
+        
+        $this->assertNull($v);
+    }
+    
+    
 }
