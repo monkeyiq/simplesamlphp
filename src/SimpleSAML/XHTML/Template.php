@@ -173,8 +173,10 @@ class Template extends Response
         $this->fileSystem = new Filesystem();
         $this->twig = $this->setupTwig();
         $this->charset = 'UTF-8';
-        // Initialize Store Cache for tag salt.
-        $this->store = StoreFactory::getInstance($configuration->getString('store.type'));
+        // Initialize Store for tag salt.
+        $this->store = StoreFactory::getInstance(
+            $configuration->getOptionalString('store.type', 'phpsession'),
+        );
 
         parent::__construct();
     }
@@ -215,6 +217,7 @@ class Template extends Response
 
         // Determine a version/tag input
         $input = $this->configuration->getVersion();
+        // Create different tag modules. Allow cache to reset if we update a module or install a new one
         if ($module !== null) {
             $composerLock = new File($baseDir . 'composer.lock');
             $input = md5($composerLock->getContent());
