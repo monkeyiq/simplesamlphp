@@ -19,7 +19,6 @@ use SimpleSAML\Locale\Translate;
 use SimpleSAML\Locale\TwigTranslator;
 use SimpleSAML\Logger;
 use SimpleSAML\Module;
-use SimpleSAML\Store\StoreFactory;
 use SimpleSAML\Utils;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\Filesystem\Filesystem;
@@ -53,8 +52,6 @@ use function substr;
  */
 class Template extends Response
 {
-    /** @var string */
-    public const  TEMPLATE_TAG = 'template_tag_';
     /**
      * The data associated with this template, accessible within the template itself.
      *
@@ -124,9 +121,6 @@ class Template extends Response
      */
     private Filesystem $fileSystem;
 
-    /** @var mixed */
-    private $store;
-
 
     /**
      * Constructor
@@ -173,10 +167,6 @@ class Template extends Response
         $this->fileSystem = new Filesystem();
         $this->twig = $this->setupTwig();
         $this->charset = 'UTF-8';
-        // Initialize Store for tag salt.
-        $this->store = StoreFactory::getInstance(
-            $configuration->getOptionalString('store.type', 'phpsession'),
-        );
 
         parent::__construct();
     }
@@ -215,57 +205,25 @@ class Template extends Response
             return $path;
         }
 
-        // Determine a version/tag input
-        $input = $this->configuration->getVersion();
-        // Create different tag modules. Allow cache to reset if we update a module or install a new one
+        $file = new File($file);
+
+        $tag = $this->configuration->getVersion();
         if ($module !== null) {
+            // Modules can be updated more frequently than the core. Especially the custom ones.
+            // As a result, we will use a different tagging method
             $composerLock = new File($baseDir . 'composer.lock');
-            $input = md5($composerLock->getContent());
-        }
-        if ($input === 'master') {
-            $assetFile = new File($file); // Avoid overwriting $file variable
-            $input = strval($assetFile->getMtime());
+            $tag = md5($composerLock->getContent());
         }
 
-        // Use a random salt, stored in
-        $salt = $this->calculateTemplateSalt(86400);
-
-        // Generate a binary HMAC, then url-safe base64, then 10-char prefix
-        $hmac = hash_hmac('sha256', $input, $salt, true);
-        $tagValue = rtrim(strtr(base64_encode($hmac), '+/', '-_'), '=');
-        $tagPrefix = substr($tagValue, 0, 10);
-
-        return $path . '?tag=' . $tagPrefix;
-    }
-
-
-    /**
-     * Calculate or retrieve a salt value used for template asset tags.
-     *
-     * If no salt exists in the store, generates a new random salt, stores it with 24 hour expiration,
-     * and returns it. Otherwise, returns the existing salt.
-     *
-     * @param int|null $expiresInSeconds  In how many seconds the salt will expire
-     * @return string Base64 encoded salt value used for template asset tag generation
-     * @throws RandomException
-     */
-    public function calculateTemplateSalt(?int $expiresInSeconds = null): string
-    {
-        $salt = null;
-        if ($this->store !== false) {
-            $salt = $this->store->get(self::TEMPLATE_TAG, 'asset_tag_salt');
+        if ($tag === 'master') {
+            $tag = strval($file->getMtime());
         }
+        // Use the `secretsalt` to enhance security.
+        // Do not make it easy to guess the underlying SSP version.
+        $secretSalt = $this->configuration->getString('secretsalt');
+        $tag = substr(hash_hmac('sha256', $tag, $secretSalt), 0, 5);
 
-        if (empty($salt)) {
-            $salt = random_bytes(32);
-            $salt = base64_encode($salt);
-        }
-
-        if ($this->store !== false) {
-            $this->store->set(self::TEMPLATE_TAG, 'asset_tag_salt', $salt, $expiresInSeconds ?? 86400);
-        }
-
-        return $salt;
+        return $path . '?tag=' . $tag;
     }
 
 
