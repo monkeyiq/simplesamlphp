@@ -10,6 +10,7 @@ See the [upgrade notes](https://simplesamlphp.org/docs/stable/simplesamlphp-upgr
 Released TBD
 
 * Added `SimpleSAML\Database::readPrimary()`, for reads that must not be served by a possibly lagging secondary
+* Fix method return-type that broke the Single Logout flow
 
 ## Version 2.5.2
 
