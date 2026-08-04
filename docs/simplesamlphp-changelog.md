@@ -11,6 +11,7 @@ Released TBD
 
 * Added `SimpleSAML\Database::readPrimary()`, for reads that must not be served by a possibly lagging secondary
 * Fix method return-type that broke the Single Logout flow
+* Fix for setting a proxy (#2662)
 
 ## Version 2.5.2
 
