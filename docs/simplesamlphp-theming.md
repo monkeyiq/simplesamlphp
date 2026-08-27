@@ -4,8 +4,7 @@
 
 In SimpleSAMLphp every part that needs to interact with the user by using a web page, uses templates to present the HTML. SimpleSAMLphp comes with a default set of templates that presents an anonymous look.
 
-If you like how the theme looks but would like to modify the colours to match your site this can be done by defining some CSS in an optional `_head.twig` file. 
-For more in depth changes to the UI you may create your own theme, where you add one or more template files that will override the default ones. This document also explains how to achieve that.
+If you like how the theme looks but would like to modify the colours to match your site this can be done by defining some CSS in an optional `_head.twig` file. For more in depth changes to the UI you may create your own theme, where you add one or more template files that will override the default ones. This document also explains how to achieve that.
 
 ## Simple colour changes with _head.twig
 
@@ -34,6 +33,7 @@ in the file `public/assets/base/css/custom-green.css`.
    --ssp-chrome-primary-backgroundv: #0e6d32;
   }
 ```
+
 ### A word about inline and Content Security Policy (CSP)
 
 You could also inline the style directly in the `_head.twig` but the default Content Security Policy (CSP) settings will not allow that to work.
